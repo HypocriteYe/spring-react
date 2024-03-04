@@ -9,6 +9,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.config.annotation.method.configuration.EnableReactiveMethodSecurity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -45,6 +47,7 @@ public class HelloController {
                 .map(i -> "haha" + i);
     }
 
+    @PreAuthorize("hasRole('admin')")
     @RequestMapping("/hehe")
     public Flux<String> hehe() {
         return Flux.just("呵呵", "呵呵", "呵呵", "呵呵", "呵呵", "呵呵", "呵呵", "呵呵", "呵呵", "呵呵");
@@ -64,6 +67,7 @@ public class HelloController {
                 .delayElements(Duration.ofMillis(500));
     }
 
+    @PreAuthorize("hasRole('delete')")
     @RequestMapping("/responseEntity")
     public ResponseEntity responseEntity() {
         System.out.println("responseEntity request");

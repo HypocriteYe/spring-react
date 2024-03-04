@@ -5,10 +5,7 @@ import java.io.Serializable;
 import java.time.Instant;
 import java.util.Date;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
@@ -20,6 +17,7 @@ import org.springframework.data.relational.core.mapping.Table;
  * @date 2024-03-04 13:55:06
  */
 @Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
 @Table("t_perm")

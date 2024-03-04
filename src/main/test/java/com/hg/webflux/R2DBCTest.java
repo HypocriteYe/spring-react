@@ -1,5 +1,8 @@
 package com.hg.webflux;
 
+import com.hg.webflux.pojo.RolesDTO;
+import com.hg.webflux.pojo.UserDTO;
+import com.hg.webflux.pojo.entity.PermPO;
 import com.hg.webflux.pojo.entity.TAuthor;
 import com.hg.webflux.pojo.entity.TBook;
 import com.hg.webflux.pojo.TBookAuthor;
@@ -15,7 +18,13 @@ import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.factory.PasswordEncoderFactories;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
+import reactor.core.scheduler.Schedulers;
 
 import java.io.IOException;
 import java.time.Instant;
@@ -44,6 +53,9 @@ public class R2DBCTest {
 
     @Autowired
     DatabaseClient databaseClient;  //  数据库客户端，贴近底层，做复杂查询
+
+    @Autowired
+    PasswordEncoder passwordEncoder;
 
     // 有了R2DBC，应用在数据库层面天然支持高并发，高吞吐量
     @Test
@@ -170,5 +182,58 @@ public class R2DBCTest {
                 })
                 .subscribe(System.out::println);
         Thread.sleep(3000);
+    }
+
+
+    @Test
+    public void passwordEncode() {
+        System.out.println(PasswordEncoderFactories.createDelegatingPasswordEncoder().encode("123456"));
+    }
+    @Test
+    public void sql() throws Exception {
+        List<UserDTO> block = databaseClient.sql("SELECT u.id uid, u.username, u.`password`, u.email, u.phone, r.id rid, r.name, r.`value`, p.id pid , p.description, p.uri, p.`value`\n" +
+                        "FROM t_user u LEFT JOIN t_user_role ur ON u.id = ur.user_id\n" +
+                        "LEFT JOIN t_roles r ON r.id = ur.role_id \n" +
+                        "LEFT JOIN t_role_perm rp ON rp.role_id = r.id\n" +
+                        "LEFT JOIN t_perm p ON rp.perm_id = p.id\n" +
+                        "WHERE u.username = ?")
+                .bind(0, "张三")
+                .fetch()
+                .all()
+                .bufferUntilChanged(row -> Long.parseLong(row.get("uid").toString()))
+                .publishOn(Schedulers.boundedElastic())
+                .map(roleList -> {
+
+                    UserDTO userDTO = new UserDTO();
+                    userDTO.setId((Long) roleList.get(0).get("uid"));
+                    userDTO.setUsername(roleList.get(0).get("username").toString());
+                    userDTO.setPassword(roleList.get(0).get("password").toString());
+                    userDTO.setEmail(roleList.get(0).get("email").toString());
+                    userDTO.setPhone(roleList.get(0).get("phone").toString());
+
+                    // roleList
+                    List<RolesDTO> rolesDTOList = Flux.fromIterable(roleList)
+                            .bufferUntilChanged(l -> l.get("uid").toString())
+                            .map(permList -> {
+                                RolesDTO rolesDTO = new RolesDTO();
+                                rolesDTO.setId((Long) permList.get(0).get("rid"));
+                                rolesDTO.setName(roleList.get(0).get("name").toString());
+                                rolesDTO.setValue(roleList.get(0).get("value").toString());
+                                // permList
+                                List<PermPO> permPOList = permList.stream().map(perm -> PermPO.builder()
+                                        .id(Long.parseLong(perm.get("pid").toString()))
+                                        .uri(perm.get("uri").toString())
+                                        .description(perm.get("description").toString())
+                                        .value(perm.get("value").toString())
+                                        .build()).toList();
+                                rolesDTO.setPermList(permPOList);
+                                return rolesDTO;
+                            }).collectList().block();
+                    userDTO.setRoleList(rolesDTOList);
+                    return userDTO;
+                }).collectList().block();
+        assert block != null;
+        Mono.just(block.get(0)).subscribe(System.out::println);
+        Thread.sleep(2000);
     }
 }

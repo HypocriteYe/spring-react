@@ -39,10 +39,12 @@ public class HelloController {
         return "Hello World!!! key=" + key;
     }
 
+
+    @PreAuthorize("hasAuthority('delete')")
     @RequestMapping("/haha")
     public Mono<String> haha() {
 //        return Mono.just("哈哈");
-        return Mono.just(0)
+        return Mono.just(2)
                 .map(i -> 10 / i)
                 .map(i -> "haha" + i);
     }

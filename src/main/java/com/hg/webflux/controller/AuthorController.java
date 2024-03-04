@@ -1,6 +1,6 @@
 package com.hg.webflux.controller;
 
-import com.hg.webflux.pojo.TAuthor;
+import com.hg.webflux.pojo.entity.TAuthor;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Flux;

@@ -2,21 +2,17 @@ package com.hg.webflux.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.hg.webflux.pojo.MyForm;
-import com.hg.webflux.pojo.TAuthor;
-import io.asyncer.r2dbc.mysql.MySqlConnectionConfiguration;
-import io.asyncer.r2dbc.mysql.MySqlConnectionFactory;
+import com.hg.webflux.pojo.entity.TAuthor;
 import io.r2dbc.spi.ConnectionFactory;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.codec.ServerSentEvent;
-import org.springframework.stereotype.Controller;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.reactive.result.view.Rendering;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
@@ -101,7 +97,7 @@ public class HelloController {
                 .flatMap(result -> result.map(readable -> {
                     Long id = readable.get("id", Long.class);
                     String name = readable.get("name", String.class);
-                    return new TAuthor(id, name);
+                    return new TAuthor(id, name, null);
                 }))
                 .subscribe(tAuthor -> System.out.println("tAuthor = " + tAuthor));
         return "success";

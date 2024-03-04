@@ -1,6 +1,7 @@
 package com.hg.webflux.repository;
 
-import com.hg.webflux.pojo.TBook;
+import com.hg.webflux.pojo.entity.TBook;
+import com.hg.webflux.pojo.TBookAuthor;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
@@ -18,5 +19,5 @@ public interface BookRepositories extends R2dbcRepository<TBook, Long> {
     @Query("select b.*, t.name from t_book b " +
             "left join t_author t on b.author_id = t.id " +
             "where b.id = ?")
-    Mono<TBook> findBookAndAuthor(Long bookId);
+    Mono<TBookAuthor> findBookAndAuthor(Long bookId);
 }

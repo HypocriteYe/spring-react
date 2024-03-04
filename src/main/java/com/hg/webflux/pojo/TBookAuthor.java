@@ -1,5 +1,6 @@
 package com.hg.webflux.pojo;
 
+import com.hg.webflux.pojo.entity.TAuthor;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -19,7 +20,7 @@ import java.time.Instant;
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class TBook {
+public class TBookAuthor {
 
     @Id
     private Long id;

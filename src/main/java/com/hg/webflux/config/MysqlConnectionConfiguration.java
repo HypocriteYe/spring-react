@@ -9,6 +9,9 @@ import org.springframework.boot.autoconfigure.r2dbc.R2dbcProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+import java.time.ZoneId;
+import java.util.TimeZone;
+
 /**
  * @description
  * @Author ygl
@@ -20,16 +23,17 @@ public class MysqlConnectionConfiguration {
     @Autowired
     private R2dbcProperties r2dbcProperties;
 
-    @Bean
-    public ConnectionFactory connectionFactory(){
-        MySqlConnectionConfiguration configuration = MySqlConnectionConfiguration.builder()
-                .host("localhost")
-                .port(3306)
-                .username(r2dbcProperties.getUsername())
-                .password(r2dbcProperties.getPassword())
-                .database(r2dbcProperties.getName())
-                .build();
-        MySqlConnectionFactory connectionFactory = MySqlConnectionFactory.from(configuration);
-        return connectionFactory;
-    }
+//    @Bean
+//    public ConnectionFactory connectionFactory(){
+//        MySqlConnectionConfiguration configuration = MySqlConnectionConfiguration.builder()
+//                .host("localhost")
+//                .port(3306)
+//                .username(r2dbcProperties.getUsername())
+//                .password(r2dbcProperties.getPassword())
+//                .database(r2dbcProperties.getName())
+//                .serverZoneId(ZoneId.of("Asia/Shanghai"))
+//                .build();
+//        MySqlConnectionFactory connectionFactory = MySqlConnectionFactory.from(configuration);
+//        return connectionFactory;
+//    }
 }

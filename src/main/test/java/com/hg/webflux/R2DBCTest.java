@@ -1,30 +1,29 @@
 package com.hg.webflux;
 
-import com.alibaba.fastjson.JSON;
-import com.hg.webflux.pojo.TAuthor;
-import com.hg.webflux.pojo.TBook;
+import com.hg.webflux.pojo.entity.TAuthor;
+import com.hg.webflux.pojo.entity.TBook;
+import com.hg.webflux.pojo.TBookAuthor;
 import com.hg.webflux.repository.AuthorRepositories;
 import com.hg.webflux.repository.BookRepositories;
 import io.asyncer.r2dbc.mysql.MySqlConnectionConfiguration;
 import io.asyncer.r2dbc.mysql.MySqlConnectionFactory;
-import io.r2dbc.spi.*;
 
 import org.junit.jupiter.api.Test;
-import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.r2dbc.ConnectionFactoryBuilder;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.r2dbc.core.R2dbcEntityTemplate;
 import org.springframework.data.relational.core.query.Criteria;
 import org.springframework.data.relational.core.query.Query;
 import org.springframework.r2dbc.core.DatabaseClient;
-import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 import java.io.IOException;
 import java.time.Instant;
-import java.util.HashSet;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @description
@@ -70,7 +69,7 @@ public class R2DBCTest {
                 .flatMap(result -> result.map(readable -> {
                     Long id = readable.get("id", Long.class);
                     String name = readable.get("name", String.class);
-                    return new TAuthor(id, name);
+                    return new TAuthor(id, name, null);
                 }))
                 .subscribe(tAuthor -> System.out.println("tAuthor = " + tAuthor));
 
@@ -97,7 +96,7 @@ public class R2DBCTest {
                 .bind(0, 2L)
                 .fetch()
                 .all()
-                .map(map -> new TAuthor((Long) map.get("id"), (String) map.get("name")))
+                .map(map -> new TAuthor((Long) map.get("id"), (String) map.get("name"), null))
                 .subscribe(System.out::println);
         System.in.read();
     }
@@ -126,12 +125,50 @@ public class R2DBCTest {
                 .bind(0, 1L)
                 .fetch()
                 .all()
-                .map(row -> TBook.builder()
+                .map(row -> TBookAuthor.builder()
                         .id((Long) row.get("id"))
                         .title(row.get("title").toString())
                         .authorId((Long) row.get("author_id"))
                         .publishTime((Instant) row.get("publish_time"))
                         .tAuthor(TAuthor.builder().id((Long) row.get("author_id")).name(row.get("name").toString()).build()))
                 .subscribe(System.out::println);
+    }
+
+    @Test
+    public void author() throws Exception{
+        authorRepositories.findById(1L).subscribe(System.out::println);
+        Thread.sleep(3000);
+    }
+
+    @Test
+    public void authorBookOneToN() throws Exception {
+        databaseClient.sql("SELECT a.id author_id, a.`name`, b.id book_id, b.title, b.publish_time\n" +
+                "FROM t_author a LEFT JOIN t_book b\n" +
+                "ON a.id = b.author_id order by a.id")
+                .fetch()
+                .all()
+                // 比较对象需要重新equals方法
+                .bufferUntilChanged(rowMap -> Long.parseLong(rowMap.get("author_id").toString()))
+                .map(list -> {
+                    TAuthor tAuthor = new TAuthor();
+                    tAuthor.setId((Long) list.get(0).get("author_id"));
+                    tAuthor.setName(list.get(0).get("name").toString());
+                    List<TBook> books = list.stream().map(map -> {
+                        TBook tBook = new TBook();
+                        tBook.setId((Long) map.get("book_id"));
+                        tBook.setAuthorId((Long) map.get("author_id"));
+                        tBook.setTitle(map.get("title").toString());
+                        String publishTime = map.get("publish_time").toString();
+                        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ssXXX['['VV']']");
+
+                        Instant instant = OffsetDateTime.parse(publishTime, formatter).atZoneSameInstant(ZoneId.of("Asia/Shanghai")).toInstant();
+                        tBook.setPublishTime(instant);
+                        return tBook;
+                    }).collect(Collectors.toList());
+                    tAuthor.setBooks(books);
+                    return tAuthor;
+                })
+                .subscribe(System.out::println);
+        Thread.sleep(3000);
     }
 }

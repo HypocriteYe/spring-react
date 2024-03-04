@@ -1,6 +1,6 @@
 package com.hg.webflux.repository;
 
-import com.hg.webflux.pojo.TAuthor;
+import com.hg.webflux.pojo.entity.TAuthor;
 import org.springframework.data.r2dbc.repository.Query;
 import org.springframework.data.r2dbc.repository.R2dbcRepository;
 import org.springframework.stereotype.Repository;
@@ -31,5 +31,6 @@ public interface AuthorRepositories extends R2dbcRepository<TAuthor, Long> {
     // 1-1 关联
     // 1-N 关联
     // 一本书有唯一的作者，一个作者有多本书籍
+
 
 }

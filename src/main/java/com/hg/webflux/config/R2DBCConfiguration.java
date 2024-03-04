@@ -1,6 +1,6 @@
 package com.hg.webflux.config;
 
-import com.hg.webflux.converter.BookConverter;
+import com.hg.webflux.converter.BookAuthorConverter;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -21,6 +21,6 @@ public class R2DBCConfiguration {
     @ConditionalOnMissingBean
     public R2dbcCustomConversions conversions() {
         // 加入自定义的转换器
-        return R2dbcCustomConversions.of(MySqlDialect.INSTANCE, new BookConverter());
+        return R2dbcCustomConversions.of(MySqlDialect.INSTANCE, new BookAuthorConverter());
     }
 }

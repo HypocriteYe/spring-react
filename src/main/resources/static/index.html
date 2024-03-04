@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Document</title>
+</head>
+<body>
+<h1>哈哈</h1>
+<!--<button>获取数据</button>-->
+<div id="app" style="width: 500px;height: 300px;background-color: gainsboro">
+
+</div>
+
+<h2>文件上传</h2>
+<form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" id="fileInput" name="file">
+    <button>上传文件</button>
+</form>
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+<script>
+    const http = axios.create({
+        baseURL: 'http://localhost:8080/',
+        timeout: 10000000,
+        responseType: 'stream',
+        onDownloadProgress: function (progressEvent) {
+            // 处理原生进度事件
+            // console.log("progressEvent->",progressEvent.event.currentTarget.responseText);
+            document.getElementById("app").innerHTML =
+                progressEvent.event.currentTarget.responseText
+            // responseText 就是sse的完整数据
+        },
+    });
+    http.get("/sse")
+        .then(function (response) {
+            // 处理成功情况
+            console.log(response);
+        })
+        .catch(function (error) {
+            // 处理错误情况
+            console.log(error)
+        })
+        .finally(function () {
+            // 总是会执行
+        })
+
+    document.getElementById("uploadForm").addEventListener("submit", function (event) {
+        event.preventDefault(); // 阻止默认提交
+        var formData = new FormData();  // 创建FormData对象
+        var fileInput = document.getElementById("fileInput");   // 获取文件对象
+        var file = fileInput.files[0];  // 获取上传的文件
+        formData.append("file", file);  // 添加文件到FormData对象中
+        http.post("/fileUpload", formData)
+            .then(function (response) {
+                console.log("文件上传成功")
+            }).finally(function () {
+                console.log("文件上传结束")
+            })
+    })
+</script>
+</body>
+</html>

@@ -1,0 +1,12 @@
+spring:
+  r2dbc:
+    password: root
+    username: root
+    url: r2dbc:mysql://localhost:3306/school_manage
+    name: school_manage
+
+
+logging:
+  level:
+    org.springframework:
+      r2dbc: DEBUG

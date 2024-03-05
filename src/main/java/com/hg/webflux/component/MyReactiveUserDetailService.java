@@ -6,6 +6,7 @@ import com.hg.webflux.pojo.entity.PermPO;
 import com.hg.webflux.pojo.entity.RolesPO;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.r2dbc.core.DatabaseClient;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.ReactiveUserDetailsService;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -51,10 +52,11 @@ public class MyReactiveUserDetailService implements ReactiveUserDetailsService {
                 .map(map -> User.builder()
                         .username(username)
                         .password(map.get("password").toString())
-                        .passwordEncoder(str -> passwordEncoder.encode(str))
+//                        .passwordEncoder(str -> passwordEncoder.encode(str))
                         // 权限
-                        .authorities("download", "view", "delete")
                         .roles("admin", "sale")
+                        .authorities(new SimpleGrantedAuthority("delete"))
+
                         .build());
         return mono;
     }

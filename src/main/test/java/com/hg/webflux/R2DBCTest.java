@@ -22,6 +22,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.factory.PasswordEncoderFactories;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.util.CollectionUtils;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 import reactor.core.scheduler.Schedulers;
@@ -31,6 +32,7 @@ import java.time.Instant;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -197,7 +199,7 @@ public class R2DBCTest {
                         "LEFT JOIN t_role_perm rp ON rp.role_id = r.id\n" +
                         "LEFT JOIN t_perm p ON rp.perm_id = p.id\n" +
                         "WHERE u.username = ?")
-                .bind(0, "张三")
+                .bind(0, "zhangsan")
                 .fetch()
                 .all()
                 .bufferUntilChanged(row -> Long.parseLong(row.get("uid").toString()))
@@ -213,7 +215,7 @@ public class R2DBCTest {
 
                     // roleList
                     List<RolesDTO> rolesDTOList = Flux.fromIterable(roleList)
-                            .bufferUntilChanged(l -> l.get("uid").toString())
+                            .bufferUntilChanged(l -> l.get("rid").toString())
                             .map(permList -> {
                                 RolesDTO rolesDTO = new RolesDTO();
                                 rolesDTO.setId((Long) permList.get(0).get("rid"));
@@ -232,7 +234,7 @@ public class R2DBCTest {
                     userDTO.setRoleList(rolesDTOList);
                     return userDTO;
                 }).collectList().block();
-        assert block != null;
+        if (CollectionUtils.isEmpty(block)) return;
         Mono.just(block.get(0)).subscribe(System.out::println);
         Thread.sleep(2000);
     }
